@@ -1,32 +1,55 @@
 import { useState } from 'react';
 
+function getText(html) {
+  let div = document.createElement('div');
+  div.innerHTML = html;
+  const text = div.textContent || div.innerText || '';
+  const lines = text.split('\n');
+  let formattedText = '';
+  for (let line of lines) {
+    let formattedLine = line.trim();
+    if (formattedLine.length > 0) formattedText += (formattedLine+'\n');
+  }
+
+  return formattedText;
+}
+
 function App() {
 
-  const [url, setUrl] = useState();
-  const [name, setName] = useState();
+  const [files, setFiles] = useState([]);
 
   const onChange = (e) => {
-    if (e.target.files.length <= 0) return;
-    const name = e.target.files[0].name.split('.')[0];
-    const reader = new FileReader();
-    reader.readAsText(e.target.files[0]);
-    reader.onload = async (e) => {
-      setName(name+".txt");
-      var file = new File([e.target.result], name+".txt", {
-        type: "text/plain",
-      });
-      setUrl(URL.createObjectURL(file));
-    };
+    function readFile(index, array) {
+      if (index >= e.target.files.length) {
+        console.log(array);
+        setFiles(array);
+        return;
+      }
+      const name = e.target.files[index].name.split('.')[0];
+      const reader = new FileReader();
+      reader.readAsText(e.target.files[index]);
+      reader.onload = (e) => {
+        var file = new File([getText(e.target.result)], name+".txt", {
+          type: "text/plain",
+        });
+        const fileObject = {
+          name: name+'.txt', 
+          url: URL.createObjectURL(file)
+        }
+        readFile(index+1, [...array, fileObject]);
+      };
+    }
+    readFile(0, []);
   };
 
   return <div className="center">
     <div style={{width: "100%"}}>
-      <label htmlFor="upload">Datei hochladen</label>
-      <input type="file" name="upload" id="upload" accept=".html" onChange={onChange} />
+      <label htmlFor="upload">Dateien hochladen</label>
+      <input type="file" name="upload" id="upload" accept=".html" multiple onChange={onChange} />
     </div>
-    {!!url && <a href={url} className="button" download={name}>
-      Konvertieren
-    </a>}
+    {!(files.length === 0) && files.map(f => <a key={f.url} href={f.url} className="button" download={f.name}>
+      Konvertieren ({f.name})
+    </a>)}
   </div>;
 }
 

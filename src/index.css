@@ -55,6 +55,7 @@ body {
   justify-content: center;
   align-items: center;
   text-decoration: none;
+  margin-bottom: 0.5rem;
 }
 
 .button:hover {
